@@ -1,11 +1,14 @@
 name: ci/cd
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main, 'release/**', 'task/**', 'feature/**', 'epic/**']
     tags: ['**']
   pull_request:
     branches: [ main, 'release/**', 'task/**', 'feature/**', 'epic/**']
+  schedule:
+    - cron: "19 3 26 * *"
 
 jobs:
 
@@ -15,15 +18,14 @@ jobs:
 
     strategy:
       matrix:
-        otp_version: [22, 23, 24, 25, 26]
-        rebar3-version: ['3.22.0']
-        os: [ubuntu-latest]
-
-    container:
-      image: erlang:${{ matrix.otp_version }}
+        otp_version: ['24', '25', '26']
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v2
+    - uses: erlef/setup-beam@v1
+      with:
+        otp-version: ${{ matrix.otp_version }}
+        rebar3-version: '3.22'
     - name: Compile
       run: rebar3 compile
     - name: Xref Checks
@@ -43,14 +45,14 @@ jobs:
 
     strategy:
       matrix:
-        otp_version: [21]
-        os: ['ubuntu-20.04']
-
-    container:
-      image: erlang:${{ matrix.otp_version }}
+        otp_version: ['21.3', '22.3', '23.3']
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v2
+    - uses: erlef/setup-beam@v1
+      with:
+        otp-version: ${{ matrix.otp_version }}
+        rebar3-version: '3.15'
     - name: Compile
       run: rebar3 compile
     - name: Xref Checks
