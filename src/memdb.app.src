@@ -1,6 +1,6 @@
 {application, 'memdb',
- [{description, "simple memory database"},
-  {vsn, "0.1.0"},
+ [{description, "A simple memory K/V store with MVCC semantics"},
+  {vsn, "0.2.0"},
   {registered, []},
   {applications,
    [kernel,
