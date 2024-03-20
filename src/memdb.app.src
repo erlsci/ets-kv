@@ -9,7 +9,8 @@
   {env,[]},
   {modules, []},
 
-  {contributors, []},
-  {licenses, []},
-  {links, []}
+  %% Package metadata:
+  {licenses, ["Mozilla-2"]},
+  {links,[{"Github","https://github.com/erlsci/memdb"}]},
+  {exclude_files, ["priv/images/*"]}
  ]}.
