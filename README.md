@@ -1,10 +1,10 @@
-# memdb
+# etskv
 
 [![Build Status][gh-actions-badge]][gh-actions]
 [![Erlang Versions][erlang-badge]][versions]
 [![Tags][github-tags-badge]][github-tags]
 
-*A simple in-memory K/V store with MVCC semantics*
+*A simple in-memory K/V store with MVCC semantics for Erlang/BEAM languages*
 
 [![][logo]][logo-large]
 
@@ -12,25 +12,18 @@
 
 * [Introduction](#introduction-)
 * [Installation](#installation-)
-* [Documentation](#documentation-)
 * [Usage](#usage-)
 * [License](#license-)
 
 ## Overview [&#x219F;](#contents)
 
-memdb is K/V store built on top of [ETS](http://www.erlang.org/doc/man/ets.html). memdb compared to ETS provides
-concurrent access to the database using [MVCC](https://en.wikipedia.org/wiki/Multiversion_concurrency_control) allowing
-multiple reader to read concurrently a consitent view of the database without locking.
+The ets-kv project (originally "memdb") offers BEAM languages a simple K/V store built on top of [ETS](http://www.erlang.org/doc/man/ets.html). In addition to ETS features and capabilities, ets-kv provides concurrent access to the store using [MVCC](https://en.wikipedia.org/wiki/Multiversion_concurrency_control), allowing multiple clients to read the store concurrently, getting a consitent view of the database without locking.
 
 All writes are serialized for now.
 
-A MemDB's memory consumption increases monotonically, even if keys are deleted or values are updated. Compaction can be
+Note that ets-kv's memory consumption increases monotonically, even if keys are deleted or values are updated. Compaction can be
 triggered manually or automatically using the auto-vacuum. A full snapshot can be stored or copied in another database
 if needed.
-
-## Documentation [&#x219F;](#contents)
-
-Full doc is available in [`memdb`](doc/memdb.md).
 
 ## Build [&#x219F;](#contents)
 
@@ -51,68 +44,68 @@ $ rebar3 shell
 
 ```erl
 Name = mydb.
-Db = memdb:open(Name).
+Db = etskv:open(Name).
 ```
 
 ### Store a values [&#x219F;](#contents)
 
-Storing a value associated to a key using `memdb:put/3`:
+Storing a value associated to a key using `etskv:put/3`:
 
 ```erl
 Key = <<"a">>,
 Value = 1,
-ok =  memdb:put(Key, Value, Db).
+ok =  etskv:put(Key, Value, Db).
 ```
 
 ### Retrieve a value [&#x219F;](#contents)
 
-Use the `memdb:get/2` function to retrieve a value.
+Use the `etskv:get/2` function to retrieve a value.
 
 ```erl
-Value = memdb:get(Key, Db).
+Value = etskv:get(Key, Db).
 ```
 
-Value should be `1`. Note that you can use `memdb:contains/2` to check ahead of time:
+Value should be `1`. Note that you can use `etskv:contains/2` to check ahead of time:
 
 ``` erl
-memdb:contains(Key, Db).
+etskv:contains(Key, Db).
 ```
 
 ### Delete a value [&#x219F;](#contents)
 
-Use `memdb:delete/2` to delete a value:
+Use `etskv:delete/2` to delete a value:
 
 ```erl
-ok = memdb:delete(Key, Db).
+ok = etskv:delete(Key, Db).
 ```
 
 ### Working with Multiple Values [&#x219F;](#contents)
 
 #### Storing
 
-Using `memdb:write_batch/2` you can write and delete multiple values in one
+Using `etskv:write_batch/2` you can write and delete multiple values in one
 pass:
 
 ```erl
-ok =  memdb:write_batch([{put, <<"a">>, 1},
+ok =  etskv:write_batch([{put, <<"a">>, 1},
                          {put, <<"b">>, 2},
                          {put, <<"c">>, 3}], Db),
 
-ok =  memdb:write_batch([{put, <<"d">>, 4},
+ok =  etskv:write_batch([{put, <<"d">>, 4},
                          {delete, <<"b">>},
                          {put, <<"e">>, 5}], Db).
 ```
 
 #### Retrieving
 
-Use `memdb:fold/4` to retrieve multiples K/Vs
+Use `etskv:fold/4` to retrieve multiples K/Vs
 
 ### Close Db [&#x219F;](#contents)
 
-Close a storage using `memdb:close/1`:
+Close a storage using `etskv:close/1`:
 
 ```erl
-memdb:close(Db)
+etskv:close(Db)
 ```
 
 ## License [&#x219F;](#contents)
@@ -128,9 +121,9 @@ Distributed under the Mozilla Public License Version 2.0.
 
 [logo]: priv/images/logo.png
 [logo-large]: priv/images/logo-large.png
-[gh-actions-badge]: https://github.com/erlsci/memdb/workflows/ci%2Fcd/badge.svg
-[gh-actions]: https://github.com/erlsci/memdb/actions
+[gh-actions-badge]: https://github.com/erlsci/ets-kv/workflows/ci%2Fcd/badge.svg
+[gh-actions]: https://github.com/erlsci/ets-kv/actions
 [erlang-badge]: https://img.shields.io/badge/erlang-21%20to%2026-blue.svg
-[versions]: https://github.com/erlsci/memdb/blob/master/.github/workflows/cicd.yml
-[github-tags]: https://github.com/erlsci/memdb/tags
-[github-tags-badge]: https://img.shields.io/github/tag/erlsci/memdb.svg
+[versions]: https://github.com/erlsci/ets-kv/blob/master/.github/workflows/cicd.yml
+[github-tags]: https://github.com/erlsci/ets-kv/tags
+[github-tags-badge]: https://img.shields.io/github/tag/erlsci/ets-kv.svg

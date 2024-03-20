@@ -4,7 +4,7 @@
 %% License, v. 2.0. If a copy of the MPL was not distributed with this
 %% file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
--module('memdb').
+-module('etskv').
 
 %% API exports
 -export([find/2,
@@ -88,7 +88,7 @@ get(Key, Db) ->
 %% @doc returns the Value associated to the Key. Default is returned if the Key doesn't exist.
 -spec get(Key :: key(), Db :: db(), Default :: any()) -> Value :: value().
 get(Key, Db, Default) ->
-    case memdb:find(Key, Db) of
+    case etskv:find(Key, Db) of
         {ok, Val} -> Val;
         error -> Default
     end.
@@ -119,7 +119,7 @@ contains(Key, #{ tab := Tab }) ->
     end.
 
 fold_keys(Fun, Acc0, Db, Opts0) ->
-    Itr = memdb:iterator(Db, [keys_only]),
+    Itr = etskv:iterator(Db, [keys_only]),
     Opts = fold_options(Opts0, ?DEFAULT_FOLD_OPTIONS),
     do_fold(Itr, Fun, Acc0, Opts).
 
@@ -142,7 +142,7 @@ fold_keys(Fun, Acc0, Db, Opts0) ->
 %% Example of function : Fun(Key, Value, Acc) -> Acc2 end.
 -spec fold(Fun :: function(), AccIn :: any(), Db :: db(), Opts :: fold_options()) -> AccOut :: any().
 fold(Fun, Acc0, Db, Opts0) ->
-    Itr = memdb:iterator(Db, []),
+    Itr = etskv:iterator(Db, []),
     Opts = fold_options(Opts0, ?DEFAULT_FOLD_OPTIONS),
     do_fold(Itr, Fun, Acc0, Opts).
 
@@ -269,19 +269,19 @@ do_fold(Itr, Fun, Acc0, #{gt := GT, gte := GTE}=Opts) ->
                   end,
 
     try
-        case memdb:iterator_move(Itr, Start) of
+        case etskv:iterator_move(Itr, Start) of
             {ok, Start} when Inclusive /= true ->
-                fold_loop(memdb:iterator_move(Itr, next), Itr, Fun,
+                fold_loop(etskv:iterator_move(Itr, next), Itr, Fun,
                           Acc0, 0, Opts);
             {ok, Start, _V} when Inclusive /= true ->
-                fold_loop(memdb:iterator_move(Itr, next), Itr, Fun,
+                fold_loop(etskv:iterator_move(Itr, next), Itr, Fun,
                           Acc0, 0, Opts);
             Next ->
                 fold_loop(Next, Itr, Fun, Acc0, 0, Opts)
 
         end
     after
-        memdb:iterator_close(Itr)
+        etskv:iterator_close(Itr)
     end.
 
 fold_loop('$iterator_limit', _Itr, _Fun, Acc, _N, _Opts) ->
@@ -312,7 +312,7 @@ fold_loop1({ok, K}, Itr, Fun, Acc0, N0, #{max := Max}=Opts) ->
     Acc = Fun(K, Acc0),
     N = N0 + 1,
     if ((Max =:=0) orelse (N < Max)) ->
-            fold_loop(memdb:iterator_move(Itr, next), Itr, Fun, Acc, N, Opts);
+            fold_loop(etskv:iterator_move(Itr, next), Itr, Fun, Acc, N, Opts);
         true ->
             Acc
 	end;
@@ -321,7 +321,7 @@ fold_loop1({ok, K, V}, Itr, Fun, Acc0, N0, #{max := Max}=Opts) ->
     N = N0 + 1,
     if
         ((Max =:= 0) orelse (N < Max)) ->
-            fold_loop(memdb:iterator_move(Itr, next), Itr, Fun, Acc, N,  Opts);
+            fold_loop(etskv:iterator_move(Itr, next), Itr, Fun, Acc, N,  Opts);
         true ->
             Acc
     end.
@@ -626,97 +626,97 @@ decode_key(Bin) when is_binary(Bin) ->
 
 
 basic_test() ->
-    Db = memdb:open(test),
-    memdb:put(<<"a">>, 1, Db),
-    ?assertEqual(1, memdb:get(<<"a">>, Db)),
-    memdb:put(<<"a">>, 2, Db),
-    ?assertEqual(2, memdb:get(<<"a">>, Db)),
-    memdb:put(<<"a1">>, 3, Db),
-    ?assertEqual(3, memdb:get(<<"a1">>, Db)),
-    ?assertEqual(2, memdb:get(<<"a">>, Db)),
-    memdb:delete(<<"a">>, Db),
-    ?assertError(not_found, memdb:get(<<"a">>, Db)),
-    ?assertEqual(3, memdb:get(<<"a1">>, Db)),
-    memdb:close(Db).
+    Db = etskv:open(test),
+    etskv:put(<<"a">>, 1, Db),
+    ?assertEqual(1, etskv:get(<<"a">>, Db)),
+    etskv:put(<<"a">>, 2, Db),
+    ?assertEqual(2, etskv:get(<<"a">>, Db)),
+    etskv:put(<<"a1">>, 3, Db),
+    ?assertEqual(3, etskv:get(<<"a1">>, Db)),
+    ?assertEqual(2, etskv:get(<<"a">>, Db)),
+    etskv:delete(<<"a">>, Db),
+    ?assertError(not_found, etskv:get(<<"a">>, Db)),
+    ?assertEqual(3, etskv:get(<<"a1">>, Db)),
+    etskv:close(Db).
 
 write_batch_test() ->
-    Db = memdb:open(test),
-    memdb:write_batch([{put, <<"a">>, 1},
+    Db = etskv:open(test),
+    etskv:write_batch([{put, <<"a">>, 1},
                              {put, <<"b">>, 2},
                              {put, <<"c">>, 1}], Db),
 
 
-    ?assert(memdb:contains(<<"a">>, Db)),
-    ?assert(memdb:contains(<<"b">>, Db)),
-    ?assert(memdb:contains(<<"c">>, Db)),
-    ?assertEqual(1, memdb:get(<<"a">>, Db)),
-    ?assertEqual(2, memdb:get(<<"b">>, Db)),
-    ?assertEqual(1, memdb:get(<<"c">>, Db)),
-    memdb:close(Db).
+    ?assert(etskv:contains(<<"a">>, Db)),
+    ?assert(etskv:contains(<<"b">>, Db)),
+    ?assert(etskv:contains(<<"c">>, Db)),
+    ?assertEqual(1, etskv:get(<<"a">>, Db)),
+    ?assertEqual(2, etskv:get(<<"b">>, Db)),
+    ?assertEqual(1, etskv:get(<<"c">>, Db)),
+    etskv:close(Db).
 
 
 iterator_test() ->
-    Db = memdb:open(test),
-    memdb:write_batch([{put, <<"a">>, 1},
+    Db = etskv:open(test),
+    etskv:write_batch([{put, <<"a">>, 1},
                              {put, <<"b">>, 2},
                              {put, <<"c">>, 1}], Db),
 
-	Iterator = memdb:iterator(Db),
-	memdb:put(<<"a">>, 2, Db),
-	?assertEqual(2, memdb:get(<<"a">>, Db)),
-    ?assertEqual({ok, <<"a">>, 1}, memdb:iterator_move(Iterator, next)),
-    ?assertEqual({ok, <<"b">>, 2}, memdb:iterator_move(Iterator, next)),
-    ?assertEqual({ok, <<"c">>, 1}, memdb:iterator_move(Iterator, next)),
-    ?assertEqual('$iterator_limit', memdb:iterator_move(Iterator, next)),
-    ?assertEqual('$iterator_limit', memdb:iterator_move(Iterator, next)),
+	Iterator = etskv:iterator(Db),
+	etskv:put(<<"a">>, 2, Db),
+	?assertEqual(2, etskv:get(<<"a">>, Db)),
+    ?assertEqual({ok, <<"a">>, 1}, etskv:iterator_move(Iterator, next)),
+    ?assertEqual({ok, <<"b">>, 2}, etskv:iterator_move(Iterator, next)),
+    ?assertEqual({ok, <<"c">>, 1}, etskv:iterator_move(Iterator, next)),
+    ?assertEqual('$iterator_limit', etskv:iterator_move(Iterator, next)),
+    ?assertEqual('$iterator_limit', etskv:iterator_move(Iterator, next)),
 
-    ?assertEqual({ok, <<"c">>, 1}, memdb:iterator_move(Iterator, prev)),
-    ?assertEqual({ok, <<"b">>, 2}, memdb:iterator_move(Iterator, prev)),
-    ?assertEqual({ok, <<"a">>, 1}, memdb:iterator_move(Iterator, prev)),
-    ?assertEqual('$iterator_limit', memdb:iterator_move(Iterator, prev)),
-    ?assertEqual('$iterator_limit', memdb:iterator_move(Iterator, prev)),
-    ?assertEqual({ok, <<"a">>, 1}, memdb:iterator_move(Iterator, next)),
-
-
+    ?assertEqual({ok, <<"c">>, 1}, etskv:iterator_move(Iterator, prev)),
+    ?assertEqual({ok, <<"b">>, 2}, etskv:iterator_move(Iterator, prev)),
+    ?assertEqual({ok, <<"a">>, 1}, etskv:iterator_move(Iterator, prev)),
+    ?assertEqual('$iterator_limit', etskv:iterator_move(Iterator, prev)),
+    ?assertEqual('$iterator_limit', etskv:iterator_move(Iterator, prev)),
+    ?assertEqual({ok, <<"a">>, 1}, etskv:iterator_move(Iterator, next)),
 
 
 
-	?assertEqual({ok, <<"a">>, 1}, memdb:iterator_move(Iterator, first)),
-	?assertEqual({ok, <<"c">>, 1}, memdb:iterator_move(Iterator, last)),
 
-    ?assertEqual({ok, <<"b">>, 2}, memdb:iterator_move(Iterator, <<"b">>)),
-    ?assertEqual({ok, <<"c">>, 1}, memdb:iterator_move(Iterator, next)),
 
-    memdb:iterator_close(Iterator),
+	?assertEqual({ok, <<"a">>, 1}, etskv:iterator_move(Iterator, first)),
+	?assertEqual({ok, <<"c">>, 1}, etskv:iterator_move(Iterator, last)),
 
-    ?assertEqual({error, iterator_closed}, memdb:iterator_move(Iterator, next)),
+    ?assertEqual({ok, <<"b">>, 2}, etskv:iterator_move(Iterator, <<"b">>)),
+    ?assertEqual({ok, <<"c">>, 1}, etskv:iterator_move(Iterator, next)),
 
-	Iterator2 = memdb:iterator(Db),
-    ?assertEqual({ok, <<"a">>, 2}, memdb:iterator_move(Iterator2, next)),
-    ?assertEqual({ok, <<"b">>, 2}, memdb:iterator_move(Iterator2, next)),
-    ?assertEqual({ok, <<"c">>, 1}, memdb:iterator_move(Iterator2, next)),
-    ?assertEqual('$iterator_limit', memdb:iterator_move(Iterator2, next)),
-	memdb:iterator_close(Iterator2),
+    etskv:iterator_close(Iterator),
 
-    memdb:close(Db).
+    ?assertEqual({error, iterator_closed}, etskv:iterator_move(Iterator, next)),
+
+	Iterator2 = etskv:iterator(Db),
+    ?assertEqual({ok, <<"a">>, 2}, etskv:iterator_move(Iterator2, next)),
+    ?assertEqual({ok, <<"b">>, 2}, etskv:iterator_move(Iterator2, next)),
+    ?assertEqual({ok, <<"c">>, 1}, etskv:iterator_move(Iterator2, next)),
+    ?assertEqual('$iterator_limit', etskv:iterator_move(Iterator2, next)),
+	etskv:iterator_close(Iterator2),
+
+    etskv:close(Db).
 
 
 fold_keys_test() ->
-	Db = memdb:open(test),
-	ok =  memdb:write_batch([{put, <<"a">>, 1},
+	Db = etskv:open(test),
+	ok =  etskv:write_batch([{put, <<"a">>, 1},
 								   {put, <<"b">>, 2},
 								   {put, <<"c">>, 3},
 								   {put, <<"d">>, 4}], Db),
 
 	AccFun = fun(K, Acc) -> [K | Acc] end,
 	?assertMatch([<<"a">>, <<"b">>, <<"c">>, <<"d">>],
-				 lists:reverse(memdb:fold_keys(AccFun, [], Db, []))),
-	memdb:close(Db).
+				 lists:reverse(etskv:fold_keys(AccFun, [], Db, []))),
+	etskv:close(Db).
 
 
 fold_gt_test() ->
-	Db = memdb:open(test),
-	ok =  memdb:write_batch([{put, <<"a">>, 1},
+	Db = etskv:open(test),
+	ok =  etskv:write_batch([{put, <<"a">>, 1},
 								   {put, <<"b">>, 2},
 								   {put, <<"c">>, 3},
 								   {put, <<"d">>, 4}], Db),
@@ -726,14 +726,14 @@ fold_gt_test() ->
 			 end,
 
 	?assertMatch([{<<"b">>, 2}, {<<"c">>, 3}, {<<"d">>, 4}],
-				 lists:reverse(memdb:fold(AccFun, [], Db,[{gt, <<"a">>}]))),
-	memdb:close(Db).
+				 lists:reverse(etskv:fold(AccFun, [], Db,[{gt, <<"a">>}]))),
+	etskv:close(Db).
 
 
 fold_lt_test() ->
-	Db = memdb:open(test),
+	Db = etskv:open(test),
 
-	ok =  memdb:write_batch([{put, <<"a">>, 1},
+	ok =  etskv:write_batch([{put, <<"a">>, 1},
 								   {put, <<"b">>, 2},
 								   {put, <<"c">>, 3},
 								   {put, <<"d">>, 4}], Db),
@@ -743,12 +743,12 @@ fold_lt_test() ->
 			 end,
 
 	?assertMatch([{<<"a">>, 1}, {<<"b">>, 2}, {<<"c">>, 3}],
-				 lists:reverse(memdb:fold(AccFun, [], Db, [{lt, <<"d">>}]))),
-	memdb:close(Db).
+				 lists:reverse(etskv:fold(AccFun, [], Db, [{lt, <<"d">>}]))),
+	etskv:close(Db).
 
 fold_lt_gt_test() ->
-	Db = memdb:open(test),
-	ok =  memdb:write_batch([{put, <<"a">>, 1},
+	Db = etskv:open(test),
+	ok =  etskv:write_batch([{put, <<"a">>, 1},
 								   {put, <<"b">>, 2},
 								   {put, <<"c">>, 3},
 								   {put, <<"d">>, 4}], Db),
@@ -758,15 +758,15 @@ fold_lt_gt_test() ->
 			 end,
 
 	?assertMatch([{<<"b">>, 2}, {<<"c">>, 3}],
-				 lists:reverse(memdb:fold(
+				 lists:reverse(etskv:fold(
 								 AccFun, [], Db,
 								 [{gt, <<"a">>},  {lt, <<"d">>}]))),
-	memdb:close(Db).
+	etskv:close(Db).
 
 
 fold_lt_gt_max_test() ->
-	Db = memdb:open(test),
-	ok =  memdb:write_batch([{put, <<"a">>, 1},
+	Db = etskv:open(test),
+	ok =  etskv:write_batch([{put, <<"a">>, 1},
 								   {put, <<"b">>, 2},
 								   {put, <<"c">>, 3},
 								   {put, <<"d">>, 4}], Db),
@@ -778,10 +778,10 @@ fold_lt_gt_max_test() ->
 			 end,
 
 	?assertMatch([{<<"b">>, 2}],
-				 memdb:fold(AccFun, [], Db,  [{gt, <<"a">>},
+				 etskv:fold(AccFun, [], Db,  [{gt, <<"a">>},
 													{lt, <<"d">>},
 													{max, 1}])),
-	memdb:close(Db).
+	etskv:close(Db).
 
 
 

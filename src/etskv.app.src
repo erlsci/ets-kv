@@ -1,5 +1,5 @@
-{application, 'memdb',
- [{description, "A simple in-memory K/V store with MVCC semantics"},
+{application, 'etskv',
+ [{description, "A simple in-memory K/V store with MVCC semantics for Erlang/BEAM languages"},
   {vsn, "0.2.0"},
   {registered, []},
   {applications,
@@ -11,6 +11,6 @@
 
   %% Package metadata:
   {licenses, ["Mozilla-2"]},
-  {links,[{"Github","https://github.com/erlsci/memdb"}]},
+  {links,[{"Github","https://github.com/erlsci/ets-kv"}]},
   {exclude_files, ["priv/images/*"]}
  ]}.
