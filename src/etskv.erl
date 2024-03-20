@@ -11,7 +11,7 @@
          get/2, get/3,
          put/3,
          delete/2,
-         write_batch/2,
+         batch/2,
          contains/2,
          fold_keys/4,
          fold/4]).
@@ -29,12 +29,12 @@
 
 
 %% private ent private entry points (gen_server callbacks)
--export([ init/1
-        , handle_call/3
-        , handle_cast/2
-        , handle_info/2
-        , terminate/2
-        , code_change/3]).
+-export([init/1,
+         handle_call/3,
+         handle_cast/2,
+         handle_info/2,
+         terminate/2,
+         code_change/3]).
 
 %% private iterator loop entry point
 -export([ iterator_loop/1 ]).
@@ -53,7 +53,7 @@
 
 -type key() :: binary().
 -type value() :: term() | any().
--type write_ops() :: [{put, key(), value()} | {delete, key()}].
+-type batch_ops() :: [{put, key(), value()} | {delete, key()}].
 -type fold_options() :: [{start_key, key()}
                          | {end_key, key()}
                          | {gt, key()}
@@ -96,17 +96,17 @@ get(Key, Db, Default) ->
 %% @doc Associates Key with value Value and store it.
 -spec put(Key :: key(), Value :: value(), Db :: db()) -> ok.
 put(Key, Value, Db) ->
-    write_batch([{put, Key, Value}], Db).
+    batch([{put, Key, Value}], Db).
 
 %% @doc delete a Key
 -spec delete(Key :: key(), Db :: db()) -> ok.
 delete(Key, Db) ->
-    write_batch([{delete, Key}], Db).
+    batch([{delete, Key}], Db).
 
 %% @doc Apply atomically a set of updates to the store
--spec write_batch(Ops :: write_ops(), Db :: db()) -> ok.
-write_batch(Ops, #{ writer := W }) ->
-    gen_server:call(W, {write, Ops}).
+-spec batch(Ops :: batch_ops(), Db :: db()) -> ok.
+batch(Ops, #{ writer := W }) ->
+    gen_server:call(W, {batch, Ops}).
 
 %% @doc check if a Key exists in the store
 -spec contains(Key :: key(), Db :: db()) -> true | false.
@@ -375,7 +375,7 @@ init([Name, _Options]) ->
            busy_versions => []}}.
 
 
-handle_call({write, Ops}, _From, State) ->
+handle_call({batch, Ops}, _From, State) ->
     #{ tab := Tab, version := Version} = State,
     NextVersion = Version + 1,
     ToInsert = process_ops(Ops, NextVersion, Tab, []),
@@ -394,7 +394,7 @@ handle_call(close, _From, #{ tab := Tab } = State) ->
 handle_call(_Msg, _From, State) ->
     {reply, badarg, State}.
 
-handle_cast({write, Ops}, State) ->
+handle_cast({batch, Ops}, State) ->
     #{ tab := Tab, version := Version} = State,
     NextVersion = Version +1,
     ToInsert = process_ops(Ops, NextVersion, Tab, []),

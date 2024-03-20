@@ -83,17 +83,17 @@ ok = etskv:delete(Key, Store).
 
 #### Storing
 
-Using `etskv:write_batch/2` you can write and delete multiple values in one
+Using `etskv:batch/2` you can write and delete multiple values in one
 pass:
 
 ```erl
-ok =  etskv:write_batch([{put, <<"a">>, 1},
-                         {put, <<"b">>, 2},
-                         {put, <<"c">>, 3}], Store),
+ok =  etskv:batch([{put, <<"a">>, 1},
+                   {put, <<"b">>, 2},
+                   {put, <<"c">>, 3}], Store),
 
-ok =  etskv:write_batch([{put, <<"d">>, 4},
-                         {delete, <<"b">>},
-                         {put, <<"e">>, 5}], Store).
+ok =  etskv:batch([{put, <<"d">>, 4},
+                   {delete, <<"b">>},
+                   {put, <<"e">>, 5}], Store).
 ```
 
 #### Retrieving

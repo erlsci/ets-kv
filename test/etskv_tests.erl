@@ -16,9 +16,9 @@ basic_test() ->
     ?assertEqual(3, etskv:get(<<"a1">>, Store)),
     etskv:close(Store).
 
-write_batch_test() ->
+batch_test() ->
     Store = etskv:open(test),
-    etskv:write_batch([{put, <<"a">>, 1},
+    etskv:batch([{put, <<"a">>, 1},
                              {put, <<"b">>, 2},
                              {put, <<"c">>, 1}], Store),
 
@@ -34,7 +34,7 @@ write_batch_test() ->
 
 iterator_test() ->
     Store = etskv:open(test),
-    etskv:write_batch([{put, <<"a">>, 1},
+    etskv:batch([{put, <<"a">>, 1},
                              {put, <<"b">>, 2},
                              {put, <<"c">>, 1}], Store),
 
@@ -71,10 +71,10 @@ iterator_test() ->
 
 fold_keys_test() ->
         Store = etskv:open(test),
-        ok =  etskv:write_batch([{put, <<"a">>, 1},
-                                 {put, <<"b">>, 2},
-                                 {put, <<"c">>, 3},
-                                 {put, <<"d">>, 4}], Store),
+        ok =  etskv:batch([{put, <<"a">>, 1},
+                           {put, <<"b">>, 2},
+                           {put, <<"c">>, 3},
+                           {put, <<"d">>, 4}], Store),
 
         AccFun = fun(K, Acc) -> [K | Acc] end,
         ?assertMatch([<<"a">>, <<"b">>, <<"c">>, <<"d">>],
@@ -84,10 +84,10 @@ fold_keys_test() ->
 
 fold_gt_test() ->
         Store = etskv:open(test),
-        ok =  etskv:write_batch([{put, <<"a">>, 1},
-                                 {put, <<"b">>, 2},
-                                 {put, <<"c">>, 3},
-                                 {put, <<"d">>, 4}], Store),
+        ok =  etskv:batch([{put, <<"a">>, 1},
+                           {put, <<"b">>, 2},
+                           {put, <<"c">>, 3},
+                           {put, <<"d">>, 4}], Store),
 
         AccFun = fun(K, V, Acc) ->
                          [{K, V} | Acc]
@@ -100,10 +100,10 @@ fold_gt_test() ->
 
 fold_lt_test() ->
         Store = etskv:open(test),
-        ok =  etskv:write_batch([{put, <<"a">>, 1},
-                                 {put, <<"b">>, 2},
-                                 {put, <<"c">>, 3},
-                                 {put, <<"d">>, 4}], Store),
+        ok =  etskv:batch([{put, <<"a">>, 1},
+                           {put, <<"b">>, 2},
+                           {put, <<"c">>, 3},
+                           {put, <<"d">>, 4}], Store),
 
         AccFun = fun(K, V, Acc) ->
                      [{K, V} | Acc]
@@ -115,10 +115,10 @@ fold_lt_test() ->
 
 fold_lt_gt_test() ->
         Store = etskv:open(test),
-        ok =  etskv:write_batch([{put, <<"a">>, 1},
-                                 {put, <<"b">>, 2},
-                                 {put, <<"c">>, 3},
-                                 {put, <<"d">>, 4}], Store),
+        ok =  etskv:batch([{put, <<"a">>, 1},
+                           {put, <<"b">>, 2},
+                           {put, <<"c">>, 3},
+                           {put, <<"d">>, 4}], Store),
 
         AccFun = fun(K, V, Acc) ->
                       [{K, V} | Acc]
@@ -133,10 +133,10 @@ fold_lt_gt_test() ->
 
 fold_lt_gt_max_test() ->
         Store = etskv:open(test),
-        ok =  etskv:write_batch([{put, <<"a">>, 1},
-                                 {put, <<"b">>, 2},
-                                 {put, <<"c">>, 3},
-                                 {put, <<"d">>, 4}], Store),
+        ok =  etskv:batch([{put, <<"a">>, 1},
+                           {put, <<"b">>, 2},
+                           {put, <<"c">>, 3},
+                           {put, <<"d">>, 4}], Store),
 
 
 
