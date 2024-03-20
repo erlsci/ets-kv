@@ -1,6 +1,6 @@
 {application, 'etskv',
  [{description, "A simple in-memory K/V store with MVCC semantics for Erlang/BEAM languages"},
-  {vsn, "0.2.0"},
+  {vsn, "0.3.0"},
   {registered, []},
   {applications,
    [kernel,
