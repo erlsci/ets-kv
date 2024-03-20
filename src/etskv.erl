@@ -48,7 +48,7 @@
                                 max => 0}).
 
 
--type db() :: #{tab => atom(), writer => pid()}.
+-type store() :: #{tab => atom(), writer => pid()}.
 -type iterator() :: pid().
 
 -type key() :: binary().
@@ -74,42 +74,42 @@
 %%
 
 
-find(Key, Db) ->
-    case catch get_last(Key, Db) of
+find(Key, Store) ->
+    case catch get_last(Key, Store) of
         not_found -> error;
         V -> {ok, V}
     end.
 
 %% @doc returns the Value associated to the Key. If the key doesn't exits and error will be raised.
--spec get(Key::key(), Db :: db()) -> Value :: value().
-get(Key, Db) ->
-   get_last(Db, Key).
+-spec get(Key::key(), Store :: store()) -> Value :: value().
+get(Key, Store) ->
+   get_last(Store, Key).
 
 %% @doc returns the Value associated to the Key. Default is returned if the Key doesn't exist.
--spec get(Key :: key(), Db :: db(), Default :: any()) -> Value :: value().
-get(Key, Db, Default) ->
-    case etskv:find(Key, Db) of
+-spec get(Key :: key(), Store :: store(), Default :: any()) -> Value :: value().
+get(Key, Store, Default) ->
+    case etskv:find(Key, Store) of
         {ok, Val} -> Val;
         error -> Default
     end.
 
 %% @doc Associates Key with value Value and store it.
--spec put(Key :: key(), Value :: value(), Db :: db()) -> ok.
-put(Key, Value, Db) ->
-    batch([{put, Key, Value}], Db).
+-spec put(Key :: key(), Value :: value(), Store :: store()) -> ok.
+put(Key, Value, Store) ->
+    batch([{put, Key, Value}], Store).
 
 %% @doc delete a Key
--spec delete(Key :: key(), Db :: db()) -> ok.
-delete(Key, Db) ->
-    batch([{del, Key}], Db).
+-spec delete(Key :: key(), Store :: store()) -> ok.
+delete(Key, Store) ->
+    batch([{del, Key}], Store).
 
 %% @doc Apply atomically a set of updates to the store
--spec batch(Ops :: batch_ops(), Db :: db()) -> ok.
+-spec batch(Ops :: batch_ops(), Store :: store()) -> ok.
 batch(Ops, #{ writer := W }) ->
     gen_server:call(W, {batch, Ops}).
 
 %% @doc check if a Key exists in the store
--spec contains(Key :: key(), Db :: db()) -> true | false.
+-spec contains(Key :: key(), Store :: store()) -> true | false.
 contains(Key, #{ tab := Tab }) ->
     case ets:next(Tab, {r, prefix(Key)}) of
         '$end_of_table' -> false;
@@ -118,8 +118,8 @@ contains(Key, #{ tab := Tab }) ->
             Type =:= 1
     end.
 
-fold_keys(Fun, Acc0, Db, Opts0) ->
-    Itr = etskv:iterator(Db, [keys_only]),
+fold_keys(Fun, Acc0, Store, Opts0) ->
+    Itr = etskv:iterator(Store, [keys_only]),
     Opts = fold_options(Opts0, ?DEFAULT_FOLD_OPTIONS),
     do_fold(Itr, Fun, Acc0, Opts).
 
@@ -140,9 +140,9 @@ fold_keys(Fun, Acc0, Db, Opts0) ->
 %% </ul>
 %%
 %% Example of function : Fun(Key, Value, Acc) -> Acc2 end.
--spec fold(Fun :: function(), AccIn :: any(), Db :: db(), Opts :: fold_options()) -> AccOut :: any().
-fold(Fun, Acc0, Db, Opts0) ->
-    Itr = etskv:iterator(Db, []),
+-spec fold(Fun :: function(), AccIn :: any(), Store :: store(), Opts :: fold_options()) -> AccOut :: any().
+fold(Fun, Acc0, Store, Opts0) ->
+    Itr = etskv:iterator(Store, []),
     Opts = fold_options(Opts0, ?DEFAULT_FOLD_OPTIONS),
     do_fold(Itr, Fun, Acc0, Opts).
 
@@ -153,12 +153,12 @@ fold(Fun, Acc0, Db, Opts0) ->
 %%
 %% Note: compared to ETS you won't have to worry about the possibility that a key may be inserted while you iterrate.
 %% The version you browsing won't be affected.
--spec iterator(Db :: db()) -> iterator().
-iterator(Db) ->
-    iterator(Db, []).
+-spec iterator(Store :: store()) -> iterator().
+iterator(Store) ->
+    iterator(Store, []).
 
 %% @doc initialize an iterator with options. `keys_only' is the only option available for now.
--spec iterator(Db :: db(), Options :: iterator_options()) -> iterator().
+-spec iterator(Store :: store(), Options :: iterator_options()) -> iterator().
 iterator(#{ writer := W }, Options) ->
 	gen_server:call(W, {new_iterator, Options}).
 
@@ -209,7 +209,7 @@ iterator_close(Itr) ->
     end.
 
 %% @doc open the store Name
--spec open(atom()) -> db().
+-spec open(atom()) -> store().
 open(Name) ->
     open(Name, []).
 
@@ -521,8 +521,8 @@ iterator_lookup('$end_of_table', Itr) ->
 iterator_lookup({[{Key, _XMax}], Cont}, #{ keys_only := true }=Itr) ->
     {{ok, Key}, Itr#{ last => Key, next => Cont }};
 iterator_lookup({[{Key, XMax}], Cont}, #{ tab := Tab, version := Version}=Itr) ->
-    DbVersion = erlang:min(Version, XMax),
-    case ets:lookup(Tab, {r, make_key(Key, DbVersion, 1)}) of
+    StoreVersion = erlang:min(Version, XMax),
+    case ets:lookup(Tab, {r, make_key(Key, StoreVersion, 1)}) of
         [] -> error({error, invalid_iterator});
         [{_, Value}] ->
             {{ok, Key, Value}, Itr#{ last => Key, next => Cont }}
