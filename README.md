@@ -120,7 +120,7 @@ Distributed under the Mozilla Public License Version 2.0.
 [//]: ---Named-Links---
 
 [logo]: priv/images/logo.png
-[logo-large]: priv/images/logo-large.png
+[logo-large]: priv/images/logo-large.jpg
 [gh-actions-badge]: https://github.com/erlsci/ets-kv/workflows/ci%2Fcd/badge.svg
 [gh-actions]: https://github.com/erlsci/ets-kv/actions
 [erlang-badge]: https://img.shields.io/badge/erlang-21%20to%2026-blue.svg
