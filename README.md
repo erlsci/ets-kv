@@ -1,7 +1,6 @@
 # memdb
 
 [![Build Status][gh-actions-badge]][gh-actions]
-[![LFE Versions][lfe-badge]][lfe]
 [![Erlang Versions][erlang-badge]][versions]
 [![Tags][github-tags-badge]][github-tags]
 
@@ -127,13 +126,11 @@ Distributed under the Mozilla Public License Version 2.0.
 
 [//]: ---Named-Links---
 
-[logo]: priv/images/lmug.png
-[logo-large]: priv/images/lmug-large.png
-[gh-actions-badge]: https://github.com/lfe-mug/lmug-inets/workflows/ci%2Fcd/badge.svg
-[gh-actions]: https://github.com/lfe-mug/lmug-inets/actions
-[lfe]: https://github.com/lfe/lfe
-[lfe-badge]: https://img.shields.io/badge/lfe-2.1-blue.svg
+[logo]: priv/images/logo.png
+[logo-large]: priv/images/logo-large.png
+[gh-actions-badge]: https://github.com/erlsci/memdb/workflows/ci%2Fcd/badge.svg
+[gh-actions]: https://github.com/erlsci/memdb/actions
 [erlang-badge]: https://img.shields.io/badge/erlang-21%20to%2026-blue.svg
-[versions]: https://github.com/lfe-mug/lmug-inets/blob/master/.github/workflows/cicd.yml
-[github-tags]: https://github.com/lfe-mug/lmug-inets/tags
-[github-tags-badge]: https://img.shields.io/github/tag/lfe-mug/lmug-inets.svg
+[versions]: https://github.com/erlsci/memdb/blob/master/.github/workflows/cicd.yml
+[github-tags]: https://github.com/erlsci/memdb/tags
+[github-tags-badge]: https://img.shields.io/github/tag/erlsci/memdb.svg
