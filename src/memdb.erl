@@ -48,7 +48,7 @@
                                 max => 0}).
 
 
--type db() :: #{}.
+-type db() :: #{tab => atom(), writer => pid()}.
 -type iterator() :: pid().
 
 -type key() :: binary().
