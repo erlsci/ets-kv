@@ -103,12 +103,12 @@ put(Key, Value, Db) ->
 delete(Key, Db) ->
     write_batch([{delete, Key}], Db).
 
-%% @doc Apply atomically a set of updates to the database
+%% @doc Apply atomically a set of updates to the store
 -spec write_batch(Ops :: write_ops(), Db :: db()) -> ok.
 write_batch(Ops, #{ writer := W }) ->
     gen_server:call(W, {write, Ops}).
 
-%% @doc check if a Key exists in the database
+%% @doc check if a Key exists in the store
 -spec contains(Key :: key(), Db :: db()) -> true | false.
 contains(Key, #{ tab := Tab }) ->
     case ets:next(Tab, {r, prefix(Key)}) of
@@ -123,7 +123,7 @@ fold_keys(Fun, Acc0, Db, Opts0) ->
     Opts = fold_options(Opts0, ?DEFAULT_FOLD_OPTIONS),
     do_fold(Itr, Fun, Acc0, Opts).
 
-%% @doc fold all K/Vs in the database with a function Fun.
+%% @doc fold all K/Vs in the store with a function Fun.
 %% Additionnaly you can pass the following options:
 %% <ul>
 %% <li>'gt', (greater than), 'gte' (greather than or equal): define the lower
@@ -148,7 +148,7 @@ fold(Fun, Acc0, Db, Opts0) ->
 
 
 
-%% @doc initialize an iterator. And itterator allows you to iterrate over a consistent view of the database without
+%% @doc initialize an iterator. And itterator allows you to iterrate over a consistent view of the store without
 %% blocking any writes.
 %%
 %% Note: compared to ETS you won't have to worry about the possibility that a key may be inserted while you iterrate.
@@ -208,7 +208,7 @@ iterator_close(Itr) ->
               error(timeout)
     end.
 
-%% @doc open the database Name
+%% @doc open the store Name
 -spec open(atom()) -> db().
 open(Name) ->
     open(Name, []).
@@ -219,7 +219,7 @@ open(Name, Options) when is_atom(Name) ->
 open(Name, _) ->
     error({invalid_name, Name}).
 
-%% @doc close a database
+%% @doc close the store
 close(#{ writer := Writer }) ->
     try
         gen_server:call(Writer, close, infinity)

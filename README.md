@@ -17,12 +17,12 @@
 
 ## Overview [&#x219F;](#contents)
 
-The ets-kv project (originally "memdb") offers BEAM languages a simple K/V store built on top of [ETS](http://www.erlang.org/doc/man/ets.html). In addition to ETS features and capabilities, ets-kv provides concurrent access to the store using [MVCC](https://en.wikipedia.org/wiki/Multiversion_concurrency_control), allowing multiple clients to read the store concurrently, getting a consitent view of the database without locking.
+The ets-kv project (originally "memdb") offers BEAM languages a simple K/V store built on top of [ETS](http://www.erlang.org/doc/man/ets.html). In addition to ETS features and capabilities, ets-kv provides concurrent access to the store using [MVCC](https://en.wikipedia.org/wiki/Multiversion_concurrency_control), allowing multiple clients to read the store concurrently, getting a consitent view of the store without locking.
 
 All writes are serialized for now.
 
 Note that ets-kv's memory consumption increases monotonically, even if keys are deleted or values are updated. Compaction can be
-triggered manually or automatically using the auto-vacuum. A full snapshot can be stored or copied in another database
+triggered manually or automatically using the auto-vacuum. A full snapshot can be stored or copied in another store
 if needed.
 
 ## Build [&#x219F;](#contents)
@@ -40,21 +40,21 @@ Start up an Erlang shell:
 $ rebar3 shell
 ```
 
-### Create a database [&#x219F;](#contents)
+### Create a Store [&#x219F;](#contents)
 
 ```erl
-Name = mydb.
-Db = etskv:open(Name).
+Name = mystor.
+Store = etskv:open(Name).
 ```
 
-### Store a values [&#x219F;](#contents)
+### Add a value [&#x219F;](#contents)
 
-Storing a value associated to a key using `etskv:put/3`:
+Add a value associated with a key using `etskv:put/3`:
 
 ```erl
 Key = <<"a">>,
 Value = 1,
-ok =  etskv:put(Key, Value, Db).
+ok =  etskv:put(Key, Value, Store).
 ```
 
 ### Retrieve a value [&#x219F;](#contents)
@@ -62,13 +62,13 @@ ok =  etskv:put(Key, Value, Db).
 Use the `etskv:get/2` function to retrieve a value.
 
 ```erl
-Value = etskv:get(Key, Db).
+Value = etskv:get(Key, Store).
 ```
 
 Value should be `1`. Note that you can use `etskv:contains/2` to check ahead of time:
 
 ``` erl
-etskv:contains(Key, Db).
+etskv:contains(Key, Store).
 ```
 
 ### Delete a value [&#x219F;](#contents)
@@ -76,7 +76,7 @@ etskv:contains(Key, Db).
 Use `etskv:delete/2` to delete a value:
 
 ```erl
-ok = etskv:delete(Key, Db).
+ok = etskv:delete(Key, Store).
 ```
 
 ### Working with Multiple Values [&#x219F;](#contents)
@@ -89,23 +89,23 @@ pass:
 ```erl
 ok =  etskv:write_batch([{put, <<"a">>, 1},
                          {put, <<"b">>, 2},
-                         {put, <<"c">>, 3}], Db),
+                         {put, <<"c">>, 3}], Store),
 
 ok =  etskv:write_batch([{put, <<"d">>, 4},
                          {delete, <<"b">>},
-                         {put, <<"e">>, 5}], Db).
+                         {put, <<"e">>, 5}], Store).
 ```
 
 #### Retrieving
 
 Use `etskv:fold/4` to retrieve multiples K/Vs
 
-### Close Db [&#x219F;](#contents)
+### Close the Store [&#x219F;](#contents)
 
 Close a storage using `etskv:close/1`:
 
 ```erl
-etskv:close(Db)
+etskv:close(Store)
 ```
 
 ## License [&#x219F;](#contents)
