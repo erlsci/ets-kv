@@ -5,7 +5,7 @@
 [![Erlang Versions][erlang-badge]][versions]
 [![Tags][github-tags-badge]][github-tags]
 
-*A simple memory K/V store with MVCC semantics*
+*A simple in-memory K/V store with MVCC semantics*
 
 [![][logo]][logo-large]
 
@@ -32,6 +32,12 @@ if needed.
 ## Documentation [&#x219F;](#contents)
 
 Full doc is available in [`memdb`](doc/memdb.md).
+
+## Build [&#x219F;](#contents)
+
+```shell
+$ rebar3 compile
+```
 
 ## Usage
 
@@ -67,9 +73,11 @@ Use the `memdb:get/2` function to retrieve a value.
 Value = memdb:get(Key, Db).
 ```
 
-Value should be 1
+Value should be `1`. Note that you can use `memdb:contains/2` to check ahead of time:
 
-> Note: you can use `memdb:contains/2`.
+``` erl
+memdb:contains(Key, Db).
+```
 
 ### Delete a value [&#x219F;](#contents)
 
@@ -88,7 +96,7 @@ pass:
 
 ```erl
 ok =  memdb:write_batch([{put, <<"a">>, 1},
-                         lput, <<"b">>, 2},
+                         {put, <<"b">>, 2},
                          {put, <<"c">>, 3}], Db),
 
 ok =  memdb:write_batch([{put, <<"d">>, 4},
@@ -105,13 +113,7 @@ Use `memdb:fold/4` to retrieve multiples K/Vs
 Close a storage using `memdb:close/1`:
 
 ```erl
-memdb:close(Engine)
-```
-
-## Build [&#x219F;](#contents)
-
-```shell
-$ rebar3 compile
+memdb:close(Db)
 ```
 
 ## License [&#x219F;](#contents)
