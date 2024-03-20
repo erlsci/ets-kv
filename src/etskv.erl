@@ -53,7 +53,7 @@
 
 -type key() :: binary().
 -type value() :: term() | any().
--type batch_ops() :: [{put, key(), value()} | {delete, key()}].
+-type batch_ops() :: [{put, key(), value()} | {delete, key()} | {del, key()}].
 -type fold_options() :: [{start_key, key()}
                          | {end_key, key()}
                          | {gt, key()}
@@ -101,7 +101,7 @@ put(Key, Value, Db) ->
 %% @doc delete a Key
 -spec delete(Key :: key(), Db :: db()) -> ok.
 delete(Key, Db) ->
-    batch([{delete, Key}], Db).
+    batch([{del, Key}], Db).
 
 %% @doc Apply atomically a set of updates to the store
 -spec batch(Ops :: batch_ops(), Db :: db()) -> ok.
@@ -436,6 +436,8 @@ process_ops([{put, Key, Value} | Rest], Version, Tab, Acc) ->
             {{k, Key}, Meta}| Acc],
     process_ops(Rest, Version, Tab, Acc2);
 process_ops([{delete, Key} | Rest], Version, Tab, Acc) ->
+    process_ops([{del, Key} | Rest], Version, Tab, Acc);
+process_ops([{del, Key} | Rest], Version, Tab, Acc) ->
     case ets:lookup(Tab, {k, Key}) of
         [] ->
             process_ops(Rest, Version, Tab, Acc);

@@ -92,7 +92,7 @@ ok =  etskv:batch([{put, <<"a">>, 1},
                    {put, <<"c">>, 3}], Store),
 
 ok =  etskv:batch([{put, <<"d">>, 4},
-                   {delete, <<"b">>},
+                   {del, <<"b">>},
                    {put, <<"e">>, 5}], Store).
 ```
 
