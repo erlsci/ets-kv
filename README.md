@@ -1,4 +1,4 @@
-# etskv
+# ets-kv
 
 [![Build Status][gh-actions-badge]][gh-actions]
 [![Erlang Versions][erlang-badge]][versions]
@@ -34,7 +34,7 @@ $ rebar3 compile
 ## Usage
 
 
-Start up an Erlang shell:
+In the directory of a clone of this repo, start up an Erlang shell:
 
 ``` shell
 $ rebar3 shell
