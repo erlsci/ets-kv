@@ -3,6 +3,7 @@
 -include_lib("eunit/include/eunit.hrl").
 
 basic_test() ->
+    error_logger:tty(false),
     Store = etskv:open(test),
     etskv:put(<<"a">>, 1, Store),
     ?assertEqual(1, etskv:get(<<"a">>, Store)),
@@ -12,15 +13,16 @@ basic_test() ->
     ?assertEqual(3, etskv:get(<<"a1">>, Store)),
     ?assertEqual(2, etskv:get(<<"a">>, Store)),
     etskv:delete(<<"a">>, Store),
-    ?assertError(not_found, etskv:get(<<"a">>, Store)),
+    ?assertEqual({error,not_found,deleted_key,<<"a">>}, etskv:get(<<"a">>, Store)),
     ?assertEqual(3, etskv:get(<<"a1">>, Store)),
     etskv:close(Store).
 
 batch_test() ->
+    error_logger:tty(false),
     Store = etskv:open(test),
     etskv:batch([{put, <<"a">>, 1},
-                             {put, <<"b">>, 2},
-                             {put, <<"c">>, 1}], Store),
+                 {put, <<"b">>, 2},
+                 {put, <<"c">>, 1}], Store),
 
 
     ?assert(etskv:contains(<<"a">>, Store)),
@@ -32,79 +34,84 @@ batch_test() ->
     etskv:close(Store).
 
 fold_keys_test() ->
-        Store = etskv:open(test),
-        ok =  etskv:batch([{put, <<"a">>, 1},
-                           {put, <<"b">>, 2},
-                           {put, <<"c">>, 3},
-                           {put, <<"d">>, 4}], Store),
+    error_logger:tty(false),
+    Store = etskv:open(test),
+    ok =  etskv:batch([{put, <<"a">>, 1},
+                       {put, <<"b">>, 2},
+                       {put, <<"c">>, 3},
+                       {put, <<"d">>, 4}], Store),
 
-        AccFun = fun(K, Acc) -> [K | Acc] end,
-        ?assertMatch([<<"a">>, <<"b">>, <<"c">>, <<"d">>],
-                                 lists:reverse(etskv:fold_keys(AccFun, [], Store, []))),
-        etskv:close(Store).
+    AccFun = fun(K, Acc) -> [K | Acc] end,
+    ?assertMatch([<<"a">>, <<"b">>, <<"c">>, <<"d">>],
+                 lists:reverse(etskv:fold_keys(AccFun, [], Store, []))),
+    etskv:close(Store).
 
 fold_gt_test() ->
-        Store = etskv:open(test),
-        ok =  etskv:batch([{put, <<"a">>, 1},
-                           {put, <<"b">>, 2},
-                           {put, <<"c">>, 3},
-                           {put, <<"d">>, 4}], Store),
+    error_logger:tty(false),
+    Store = etskv:open(test),
+    ok =  etskv:batch([{put, <<"a">>, 1},
+                       {put, <<"b">>, 2},
+                       {put, <<"c">>, 3},
+                       {put, <<"d">>, 4}], Store),
 
-        AccFun = fun(K, V, Acc) ->
-                         [{K, V} | Acc]
-                 end,
+    AccFun = fun(K, V, Acc) ->
+                     [{K, V} | Acc]
+             end,
 
-        ?assertMatch([{<<"b">>, 2}, {<<"c">>, 3}, {<<"d">>, 4}],
-                                 lists:reverse(etskv:fold(AccFun, [], Store,[{gt, <<"a">>}]))),
-        etskv:close(Store).
+    ?assertMatch([{<<"b">>, 2}, {<<"c">>, 3}, {<<"d">>, 4}],
+                 lists:reverse(etskv:fold(AccFun, [], Store,[{gt, <<"a">>}]))),
+    etskv:close(Store).
 
 fold_lt_test() ->
-        Store = etskv:open(test),
-        ok =  etskv:batch([{put, <<"a">>, 1},
-                           {put, <<"b">>, 2},
-                           {put, <<"c">>, 3},
-                           {put, <<"d">>, 4}], Store),
+    error_logger:tty(false),
+    Store = etskv:open(test),
+    ok =  etskv:batch([{put, <<"a">>, 1},
+                       {put, <<"b">>, 2},
+                       {put, <<"c">>, 3},
+                       {put, <<"d">>, 4}], Store),
 
-        AccFun = fun(K, V, Acc) ->
+    AccFun = fun(K, V, Acc) ->
                      [{K, V} | Acc]
-                 end,
+             end,
 
-        ?assertMatch([{<<"a">>, 1}, {<<"b">>, 2}, {<<"c">>, 3}],
-                                 lists:reverse(etskv:fold(AccFun, [], Store, [{lt, <<"d">>}]))),
-        etskv:close(Store).
+    ?assertMatch([{<<"a">>, 1}, {<<"b">>, 2}, {<<"c">>, 3}],
+                 lists:reverse(etskv:fold(AccFun, [], Store, [{lt, <<"d">>}]))),
+    etskv:close(Store).
 
 fold_lt_gt_test() ->
-        Store = etskv:open(test),
-        ok =  etskv:batch([{put, <<"a">>, 1},
-                           {put, <<"b">>, 2},
-                           {put, <<"c">>, 3},
-                           {put, <<"d">>, 4}], Store),
+    error_logger:tty(false),
+    Store = etskv:open(test),
+    ok =  etskv:batch([{put, <<"a">>, 1},
+                       {put, <<"b">>, 2},
+                       {put, <<"c">>, 3},
+                       {put, <<"d">>, 4}], Store),
 
-        AccFun = fun(K, V, Acc) ->
-                      [{K, V} | Acc]
-                 end,
+    AccFun = fun(K, V, Acc) ->
+                     [{K, V} | Acc]
+             end,
 
-        ?assertMatch([{<<"b">>, 2}, {<<"c">>, 3}],
-                                 lists:reverse(etskv:fold(
-                                                                 AccFun, [], Store,
-                                                                 [{gt, <<"a">>},  {lt, <<"d">>}]))),
-        etskv:close(Store).
+    ?assertMatch([{<<"b">>, 2}, {<<"c">>, 3}],
+                 lists:reverse(etskv:fold(
+                                 AccFun, [], Store,
+                                 [{gt, <<"a">>},  {lt, <<"d">>}]))),
+    etskv:close(Store).
 
 fold_lt_gt_max_test() ->
-        Store = etskv:open(test),
-        ok =  etskv:batch([{put, <<"a">>, 1},
-                           {put, <<"b">>, 2},
-                           {put, <<"c">>, 3},
-                           {put, <<"d">>, 4}], Store),
+    error_logger:tty(false),
+    Store = etskv:open(test),
+    ok =  etskv:batch([{put, <<"a">>, 1},
+                       {put, <<"b">>, 2},
+                       {put, <<"c">>, 3},
+                       {put, <<"d">>, 4}], Store),
 
 
 
-        AccFun = fun(K, V, Acc) ->
-                         [{K, V} | Acc]
-                 end,
+    AccFun = fun(K, V, Acc) ->
+                     [{K, V} | Acc]
+             end,
 
-        ?assertMatch([{<<"b">>, 2}],
-                                 etskv:fold(AccFun, [], Store,  [{gt, <<"a">>},
-                                                                 {lt, <<"d">>},
-                                                                 {max, 1}])),
-        etskv:close(Store).
+    ?assertMatch([{<<"b">>, 2}],
+                 etskv:fold(AccFun, [], Store,  [{gt, <<"a">>},
+                                                 {lt, <<"d">>},
+                                                 {max, 1}])),
+    etskv:close(Store).

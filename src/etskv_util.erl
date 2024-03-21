@@ -4,7 +4,10 @@
          make_key/3,
          decode_key/1,
          lock_version/2,
-         unlock_version/2]).
+         unlock_version/2,
+         env/0,
+         store_name/0,
+         options/0]).
 
 prefix(Key) ->
     << Key/binary, 16#ff >>.
@@ -17,7 +20,7 @@ decode_key(Bin) when is_binary(Bin) ->
         [Key, << Type, Version:4/little-signed-integer-unit:8 >>]  ->
             {Key, -Version, Type};
         _ ->
-            error(badkey)
+            {error, badkey, Bin}
     end.
 
 lock_version(Version, Locks) ->
@@ -39,3 +42,14 @@ unlock_version(Version, Locks) ->
                     lists:keydelete(Version, 1, Locks)
             end
     end.
+
+env() ->
+    maps:from_list(application:get_all_env(etskv)).
+    
+store_name() ->
+    #{store := Name} = env(),
+    Name.
+
+options() ->
+    #{options := Options} = env(),
+    Options.

@@ -3,7 +3,7 @@
 -behaviour(gen_server).
 
 %% entry point / supervisor callback
--export([start_link/2]).
+-export([start_link/0]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -14,6 +14,10 @@
          code_change/3]).
 
 -include_lib("etskv/include/types.hrl").
+
+start_link() ->
+    #{store := Name, options := Options} = etskv_util:env(),
+    gen_server:start_link({local, Name}, ?MODULE, [Name, Options], []).
 
 init([Name, _Options]) ->
     process_flag(trap_exit, true),
@@ -36,9 +40,6 @@ init([Name, _Options]) ->
            iterator => nil,
            iterators => #{},
            busy_versions => []}}.
-
-start_link(Name, Options) ->
-    gen_server:start_link({local, Name}, ?MODULE, [Name, Options], []).
 
 handle_call({batch, Ops}, _From, State) ->
     #{ tab := Tab, version := Version} = State,

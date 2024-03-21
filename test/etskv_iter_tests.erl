@@ -3,6 +3,7 @@
 -include_lib("eunit/include/eunit.hrl").
 
 move_test() ->
+    error_logger:tty(false),
     Store = etskv:open(test),
     etskv:batch([{put, <<"a">>, 1},
                  {put, <<"b">>, 2},
@@ -30,6 +31,7 @@ move_test() ->
     etskv:close(Store).
 
 close_test() ->
+    error_logger:tty(false),
     Store = etskv:open(test),
     Iterator = etskv_iter:new(Store),
     etskv_iter:close(Iterator),
@@ -37,6 +39,7 @@ close_test() ->
     etskv:close(Store).
 
 multiple_iterators_test() ->
+    error_logger:tty(false),
     Store = etskv:open(test),
     etskv:batch([{put, <<"a">>, 3},
                  {put, <<"b">>, 1},

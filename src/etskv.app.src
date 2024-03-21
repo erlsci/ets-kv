@@ -2,6 +2,7 @@
  [{description, "A simple in-memory K/V store with MVCC semantics for Erlang/BEAM languages"},
   {vsn, "0.3.0"},
   {registered, []},
+  {mod, {etskv_app, []}},
   {applications,
    [kernel,
     stdlib

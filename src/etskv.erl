@@ -30,14 +30,40 @@
 
 %%% API functions
 
+%% @doc open the store Name
+-spec open(atom()) -> store().
+open(Name) ->
+    open(Name, #{}).
+
+open(Name, _) when is_atom(Name) == false ->
+    {error, invalid_name, "store name must be atom"};
+open(Name, Options) ->
+    application:set_env([{etskv, [{store, Name}, {options, Options}]}]),
+    {ok, _} = application:ensure_all_started(etskv),
+    Pid = whereis(Name),
+    #{tab => Name, writer => Pid}.
+
+%% @doc close the store
+close(#{ writer := Writer }) ->
+    try
+        gen_server:call(Writer, close, infinity)
+    catch
+        exit:{noproc,_} -> ok;
+        exit:noproc -> ok;
+        %%Handle the case where the monitor triggers
+        exit:{normal, _} -> ok
+    end.
+
 find(Key, Store) ->
     case catch get_last(Key, Store) of
-        not_found -> error;
-        V -> {ok, V}
+        V -> {ok, V};
+        error -> error
     end.
 
 %% @doc returns the Value associated to the Key. If the key doesn't exits and error will be raised.
 -spec get(Key::key(), Store :: store()) -> Value :: value().
+get(Key, _) when is_binary(Key) == false ->
+    {error, invalid_key_type, "key must be binary"};
 get(Key, Store) ->
    get_last(Store, Key).
 
@@ -70,8 +96,11 @@ contains(Key, #{ tab := Tab }) ->
     case ets:next(Tab, {r, etskv_util:prefix(Key)}) of
         '$end_of_table' -> false;
         {r, KeyBin} ->
-            {Key, _, Type} = etskv_util:decode_key(KeyBin),
-            Type =:= 1
+            case etskv_util:decode_key(KeyBin) of
+                {error, _, _} -> false;
+                {Key, _, Type} -> Type =:= 1;
+                _ -> false
+            end
     end.
 
 fold_keys(Fun, Acc0, Store, Opts0) ->
@@ -102,37 +131,15 @@ fold(Fun, Acc0, Store, Opts0) ->
     Opts = fold_options(Opts0, ?DEFAULT_FOLD_OPTIONS),
     do_fold(Itr, Fun, Acc0, Opts).
 
-%% @doc open the store Name
--spec open(atom()) -> store().
-open(Name) ->
-    open(Name, []).
-
-open(Name, Options) when is_atom(Name) ->
-    {ok, Pid} = etskv_svr:start_link(Name, Options),
-    #{ tab => Name, writer => Pid };
-open(Name, _) ->
-    error({invalid_name, Name}).
-
-%% @doc close the store
-close(#{ writer := Writer }) ->
-    try
-        gen_server:call(Writer, close, infinity)
-    catch
-        exit:{noproc,_} -> ok;
-        exit:noproc -> ok;
-        %%Handle the case where the monitor triggers
-        exit:{normal, _} -> ok
-    end.
-
 %%% Private functions
 
 get_last(#{ tab := Tab }, Key) ->
     case ets:next(Tab, {r, etskv_util:prefix(Key)}) of
-        '$end_of_table' -> error(not_found);
+        '$end_of_table' -> {error, not_found, key, Key};
         {r, KeyBin} ->
             {_Key, _Version, Type} = etskv_util:decode_key(KeyBin),
             if
-                Type =:= 0 -> error(not_found); %% deleted
+                Type =:= 0 -> {error, not_found, deleted_key, Key};
                 true -> i_lookup(Tab, {r, KeyBin})
             end
     end.
